@@ -50,7 +50,21 @@ function render(){
   el('date').textContent=d.toLocaleDateString(language==='de'?'de-DE':'en-US',{timeZone:'UTC',month:'long',day:'numeric'});
   el('year').textContent=d.getUTCFullYear();
   el('celebrate').textContent=language==='de'?'HEUTE FEIERN WIR':'TODAY WE CELEBRATE';
-  const items=holidays.filter(h=>h.date===key(d)).sort((a,b)=>rank(b)-rank(a));
+  const year=d.getUTCFullYear();
+  const nthWeekday=(month,weekday,n)=>{const first=new Date(Date.UTC(year,month-1,1)).getUTCDay();return new Date(Date.UTC(year,month-1,1+(weekday-first+7)%7+7*(n-1)));};
+  const movableRules={
+    'International Adjust your Chair Day':()=>nthWeekday(10,1,3),
+    "Mother's Day (various, ~2nd Sunday May)":()=>nthWeekday(5,0,2),
+    'World Kidney Day':()=>nthWeekday(3,4,2),
+    'World Kidney Day (~movable March)':()=>nthWeekday(3,4,2),
+    'World Sleep Day (~movable)':()=>{const day=new Date(Date.UTC(year,2,15));day.setUTCDate(day.getUTCDate()-(day.getUTCDay()+2)%7);return day;},
+    'World First Aid Day':()=>nthWeekday(9,6,2)
+  };
+  const items=holidays.filter(h=>{
+    if(movableRules[h.name])return key(movableRules[h.name]())===key(d);
+    if(/~movable|~2nd Sunday/i.test(h.name))return false;
+    return h.date===key(d);
+  }).sort((a,b)=>rank(b)-rank(a));
   el('feature').textContent=items[0]?holidayName(items[0].name):(language==='de'?'Ein Tag zum Feiern':'A day worth celebrating');
 }
 fetch('./holidays.json')
