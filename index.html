@@ -41,13 +41,14 @@ function setLanguage(lang){
 }
 
 const el=id=>document.getElementById(id);
-const key=d=>String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const berlinDate=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));return new Date(Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day),12));};
+const key=d=>String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
 function rank(h){let score=0,c=h.category||'';if(/^(world|international|national)\b/i.test(h.name))score+=5;if(c==='Secular/Cultural')score+=4;if(c==='UN/International')score+=3;if(/day\b/i.test(h.name))score+=1;if(/^(feast|st\.|saint|roman)/i.test(h.name))score-=8;if(/\(.*(movable|~|every \d|third|first|second|last).*\)/i.test(h.name))score-=5;return score}
 function render(){
-  const d=new Date();
-  el('weekday').textContent=d.toLocaleDateString(language==='de'?'de-DE':'en-US',{weekday:'long'});
-  el('date').textContent=d.toLocaleDateString(language==='de'?'de-DE':'en-US',{month:'long',day:'numeric'});
-  el('year').textContent=d.getFullYear();
+  const d=berlinDate();
+  el('weekday').textContent=d.toLocaleDateString(language==='de'?'de-DE':'en-US',{timeZone:'UTC',weekday:'long'});
+  el('date').textContent=d.toLocaleDateString(language==='de'?'de-DE':'en-US',{timeZone:'UTC',month:'long',day:'numeric'});
+  el('year').textContent=d.getUTCFullYear();
   el('celebrate').textContent=language==='de'?'HEUTE FEIERN WIR':'TODAY WE CELEBRATE';
   const items=holidays.filter(h=>h.date===key(d)).sort((a,b)=>rank(b)-rank(a));
   el('feature').textContent=items[0]?holidayName(items[0].name):(language==='de'?'Ein Tag zum Feiern':'A day worth celebrating');
